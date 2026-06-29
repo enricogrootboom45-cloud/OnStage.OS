@@ -12,6 +12,15 @@ export interface Organization {
   id: string
   name: string
   slug: string
+  logo_url: string | null
+  banner_url: string | null
+  primary_color: string | null
+  secondary_color: string | null
+  theme: string | null
+  tagline: string | null
+  description: string | null
+  website: string | null
+  instagram_handle: string | null
   created_at: string
 }
 
