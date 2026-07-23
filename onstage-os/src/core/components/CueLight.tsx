@@ -1,41 +1,32 @@
 import { clsx } from '../utils'
 
-export type CueTone = 'amber' | 'wash' | 'standby' | 'graphite' | 'cuesheet'
+export type CueStatus = 'live' | 'standby' | 'offline' | 'done'
 
-const DOT: Record<CueTone, string> = {
-  amber: 'bg-amber shadow-[0_0_8px_2px_rgba(232,137,58,0.55)]',
-  wash: 'bg-wash',
-  standby: 'bg-standby shadow-[0_0_8px_2px_rgba(196,69,54,0.45)]',
-  graphite: 'bg-graphite',
-  cuesheet: 'bg-cuesheet/70',
-}
-
-const TEXT: Record<CueTone, string> = {
-  amber: 'text-amber-bright',
-  wash: 'text-wash',
-  standby: 'text-standby',
-  graphite: 'text-cuesheet/50',
-  cuesheet: 'text-cuesheet/80',
-}
-
-export function CueLight({
-  tone,
-  label,
-  pulse = false,
-}: {
-  tone: CueTone
-  label: string
+interface CueLightProps {
+  status: CueStatus
   pulse?: boolean
-}) {
+  className?: string
+}
+
+export function CueLight({ status, pulse = false, className }: CueLightProps) {
+  const colors: Record<CueStatus, string> = {
+    live: 'bg-amber shadow-glow shadow-amber/40',
+    standby: 'bg-sky-400',
+    offline: 'bg-graphite-line',
+    done: 'bg-emerald-500'
+  }
+
+  const isPulsing = pulse && (status === 'live' || status === 'standby')
+
   return (
-    <span
-      className={clsx(
-        'inline-flex items-center gap-1.5 rounded-full border border-graphite-line/80 bg-riser px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider',
-        TEXT[tone],
+    <div className={clsx("relative flex h-2.5 w-2.5 items-center justify-center", className)}>
+      {isPulsing && (
+        <span className={clsx(
+          "absolute inline-flex h-full w-full animate-ping rounded-full opacity-60",
+          status === 'live' ? 'bg-amber' : 'bg-sky-400'
+        )} />
       )}
-    >
-      <span className={clsx('h-1.5 w-1.5 rounded-full', DOT[tone], pulse && 'cue-pulse')} />
-      {label}
-    </span>
+      <span className={clsx('relative inline-flex h-2.5 w-2.5 rounded-full', colors[status])} />
+    </div>
   )
 }
