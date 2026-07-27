@@ -27,9 +27,9 @@ function NavItem({ to, label, icon: Icon, end }: {
   return (
     <NavLink to={to} end={end}
       className={({ isActive }) => clsx(
-        'flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm transition-colors',
+        'relative flex items-center gap-2.5 rounded-md py-2.5 pl-3 pr-3 text-sm transition-colors',
         isActive
-          ? 'bg-amber/10 text-amber-bright'
+          ? 'bg-amber/10 text-amber-bright before:absolute before:-left-3 before:top-1/2 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-amber before:content-[""]'
           : 'text-cuesheet/55 hover:bg-blackout hover:text-cuesheet',
       )}
     >

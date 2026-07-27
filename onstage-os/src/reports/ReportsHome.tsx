@@ -117,6 +117,7 @@ export function ReportsHome() {
             value={loading ? '—' : String(liveEventCount)}
             hint={liveEventCount > 0 ? 'In progress' : 'Nothing on stage'}
             icon={<BarChart3 size={16} />}
+            tone={liveEventCount > 0 ? 'live' : 'default'}
           />
           <StatCard
             label="Crew clocked in"

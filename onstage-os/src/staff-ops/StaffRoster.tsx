@@ -75,41 +75,10 @@ export function StaffRoster() {
     loadShifts(selectedEventId)
   }
 
-  async function exportTimesheet() {
-    if (!organization) return
-    const { data } = await supabase
-      .from('shifts')
-      .select('*, staff(full_name, role_title), events(name)')
-      .eq('status', 'clocked_out')
-      .not('clock_in', 'is', null)
-      .not('clock_out', 'is', null)
-      .order('clock_in', { ascending: true })
-
-    if (!data || data.length === 0) { alert('No completed shifts to export yet.'); return }
-
-    type ShiftRow = { staff: { full_name: string; role_title: string | null }; events: { name: string }; clock_in: string; clock_out: string }
-    const rows = [
-      ['Staff Name', 'Role', 'Event', 'Clock In', 'Clock Out', 'Hours Worked'],
-      ...(data as ShiftRow[]).map(s => {
-        const hrs = ((new Date(s.clock_out).getTime() - new Date(s.clock_in).getTime()) / 3600000).toFixed(2)
-        return [s.staff?.full_name || '', s.staff?.role_title || '', s.events?.name || '',
-          new Date(s.clock_in).toLocaleString('en-ZA'), new Date(s.clock_out).toLocaleString('en-ZA'), hrs]
-      }),
-    ]
-    const csv  = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
-    const a    = Object.assign(document.createElement('a'), {
-      href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
-      download: `timesheet-${new Date().toISOString().slice(0,10)}.csv`,
-    })
-    a.click()
-    URL.revokeObjectURL(a.href)
-  }
-
   async function updateShift(shiftId: string, patch: Partial<Shift>) {
     await supabase.from('shifts').update(patch).eq('id', shiftId)
     loadShifts(selectedEventId)
   }
-
 
   function exportTimesheet() {
     if (!shifts.length || !staff.length) return
