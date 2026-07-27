@@ -1,63 +1,91 @@
-import React, { useState } from 'react';
+import { lazy, Suspense } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
+import { AuthProvider, useAuth } from './core/auth/AuthProvider'
+import { AppShell } from './core/layout/AppShell'
+import { LoginPage } from './pages/LoginPage'
+import { OnboardingOrg } from './pages/OnboardingOrg'
 
-// Import all 6 module pages
-import RunOfShow from './pages/RunOfShow';
-import ArtistManager from './pages/ArtistManager';
-import MyShifts from './pages/MyShifts';
-import EquipmentScanner from './pages/EquipmentScanner';
-import DoorScanner from './pages/DoorScanner';
-import Financials from './pages/Financials';
+// ── Lazy-loaded route chunks ──────────────────────────────────
+// Each import() becomes a separate JS chunk — only loaded when
+// the user actually navigates to that route.
+function lz<M, K extends keyof M>(fn: () => Promise<M>, key: K) {
+  return lazy(() => fn().then(m => ({ default: m[key] as React.ComponentType })))
+}
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState('run-of-show');
+const ReportsHome     = lz(() => import('./reports/ReportsHome'),          'ReportsHome')
+const EventsList      = lz(() => import('./ticketing/EventsList'),         'EventsList')
+const EventDetail     = lz(() => import('./ticketing/EventDetail'),        'EventDetail')
+const StaffRoster     = lz(() => import('./staff-ops/StaffRoster'),        'StaffRoster')
+const EquipmentTracker= lz(() => import('./staff-ops/EquipmentTracker'),   'EquipmentTracker')
+const VenuesList      = lz(() => import('./venues/VenuesList'),            'VenuesList')
+const CustomersList   = lz(() => import('./crm/CustomersList'),            'CustomersList')
+const CustomerProfile = lz(() => import('./crm/CustomerProfile'),          'CustomerProfile')
+const ImportLeads     = lz(() => import('./crm/ImportLeads'),              'ImportLeads')
+const DoorScanner     = lz(() => import('./staff-ops/DoorScanner'),        'DoorScanner')
+const SelfClockIn     = lz(() => import('./staff-ops/SelfClockIn'),        'SelfClockIn')
+const SettingsPage    = lz(() => import('./settings/SettingsPage'),        'SettingsPage')
 
-  const navigation = [
-    { id: 'run-of-show', label: '⏱️ Run of Show', component: <RunOfShow /> },
-    { id: 'artists', label: '🎤 Artist & Riders', component: <ArtistManager /> },
-    { id: 'shifts', label: '📍 My Shifts & Timecard', component: <MyShifts /> },
-    { id: 'equipment', label: '📦 Gear Scanner', component: <EquipmentScanner /> },
-    { id: 'door', label: '🎟️ Door Scanner', component: <DoorScanner /> },
-    { id: 'financials', label: '📊 Financials & POS', component: <Financials /> },
-  ];
+// Public (unauthenticated) — still lazy so they don't inflate the shell
+const PublicEventPage = lz(() => import('./public/PublicEventPage'),       'PublicEventPage')
+const TicketSuccess   = lz(() => import('./public/TicketSuccess'),         'TicketSuccess')
+const TicketView      = lz(() => import('./public/TicketView'),            'TicketView')
+const JoinPage        = lz(() => import('./pages/JoinPage'),               'JoinPage')
 
-  const currentModule = navigation.find((n) => n.id === activeTab);
+// ── Shared loading fallback ───────────────────────────────────
+function PageLoader() {
+  return (
+    <div className="flex h-full min-h-screen items-center justify-center">
+      <Loader2 size={22} className="animate-spin text-amber/60" />
+    </div>
+  )
+}
+
+// ── Protected shell ───────────────────────────────────────────
+function ProtectedApp() {
+  const { session, profile, loading } = useAuth()
+
+  if (loading) return <PageLoader />
+  if (!session)                return <LoginPage />
+  if (!profile?.organization_id) return <OnboardingOrg />
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      {/* Global Top Navbar */}
-      <header className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-white text-lg tracking-tighter">
-            OS
-          </div>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-white leading-none">OnStage OS</h1>
-            <span className="text-[10px] text-slate-400 font-mono">Live Show Operations Suite</span>
-          </div>
-        </div>
+    <Routes>
+      <Route element={<AppShell />}>
+        <Route path="/"                element={<ReportsHome />} />
+        <Route path="/events"          element={<EventsList />} />
+        <Route path="/events/:id"      element={<EventDetail />} />
+        <Route path="/staff"           element={<StaffRoster />} />
+        <Route path="/equipment"       element={<EquipmentTracker />} />
+        <Route path="/venues"          element={<VenuesList />} />
+        <Route path="/customers"       element={<CustomersList />} />
+        <Route path="/customers/:id"   element={<CustomerProfile />} />
+        <Route path="/import-leads"    element={<ImportLeads />} />
+        <Route path="/scan"            element={<DoorScanner />} />
+        <Route path="/my-shifts"       element={<SelfClockIn />} />
+        <Route path="/settings"        element={<SettingsPage />} />
+        <Route path="*"                element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
+  )
+}
 
-        {/* Tab Navigation Menu */}
-        <nav className="flex flex-wrap gap-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800/80">
-          {navigation.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                activeTab === item.id
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </header>
+// ── Root ──────────────────────────────────────────────────────
+export default function App() {
+  return (
+    <AuthProvider>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public — no auth */}
+          <Route path="/e/:slug"         element={<PublicEventPage />} />
+          <Route path="/t/:id"           element={<TicketView />} />
+          <Route path="/tickets/success" element={<TicketSuccess />} />
+          <Route path="/join"            element={<JoinPage />} />
 
-      {/* Main Active Page View */}
-      <main className="flex-1">
-        {currentModule ? currentModule.component : <RunOfShow />}
-      </main>
-    </div>
-  );
+          {/* Everything else is protected */}
+          <Route path="/*" element={<ProtectedApp />} />
+        </Routes>
+      </Suspense>
+    </AuthProvider>
+  )
 }
