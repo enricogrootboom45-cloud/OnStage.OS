@@ -104,7 +104,7 @@ export function Sidebar({ orgName }: { orgName: string }) {
 
       <div className="border-t border-graphite-line px-5 py-3">
         <p className="font-mono text-[10px] uppercase tracking-wider text-cuesheet/25">
-          Cape Town · v0.3
+          Cape Town · v0.4 · Beta
         </p>
       </div>
     </aside>
