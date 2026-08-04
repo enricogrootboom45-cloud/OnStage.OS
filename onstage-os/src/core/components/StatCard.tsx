@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { TrendingUp, TrendingDown } from 'lucide-react'
 import { clsx } from '../utils'
 
 export function StatCard({
@@ -7,12 +8,14 @@ export function StatCard({
   hint,
   icon,
   tone = 'default',
+  trend,
 }: {
   label: string
   value: string
   hint?: string
   icon?: ReactNode
   tone?: 'default' | 'warning' | 'live'
+  trend?: { direction: 'up' | 'down'; label: string; good?: boolean }
 }) {
   return (
     <div
@@ -47,7 +50,22 @@ export function StatCard({
       >
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-cuesheet/40">{hint}</p>}
+      {trend ? (
+        <div className="mt-1.5 flex items-center gap-1.5">
+          <span
+            className={clsx(
+              'inline-flex items-center gap-0.5 font-mono text-[11px]',
+              (trend.good ?? trend.direction === 'up') ? 'text-wash' : 'text-standby',
+            )}
+          >
+            {trend.direction === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+            {trend.label}
+          </span>
+          {hint && <span className="text-xs text-cuesheet/30">{hint}</span>}
+        </div>
+      ) : (
+        hint && <p className="mt-1 text-xs text-cuesheet/40">{hint}</p>
+      )}
     </div>
   )
 }

@@ -66,6 +66,7 @@ export interface Staff {
   full_name: string
   role_title: string | null
   phone: string | null
+  hourly_rate: number | null
   created_at: string
 }
 
@@ -156,6 +157,28 @@ export interface AppNotification {
   entity_type: string | null
   read: boolean
   created_at: string
+}
+
+// Shared with the customer-facing app — same Supabase project, same table.
+// OS only ever writes organisation posts (author_id stays null; organisation_id
+// is what tells the fan app's feed "this is from the organiser").
+export interface Post {
+  id: string
+  author_id: string | null
+  organisation_id: string | null
+  event_id: string | null
+  body: string | null
+  visibility: 'public' | 'followers' | 'ticket_holders'
+  created_at: string
+}
+
+export interface PostMedia {
+  id: string
+  post_id: string
+  url: string
+  media_type: string
+  aspect_ratio: string
+  display_order: number
 }
 
 export interface Invite {
