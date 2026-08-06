@@ -66,7 +66,7 @@ export function EquipmentTracker() {
 
   return (
     <div>
-      <TopBar title="Equipment" />
+      <TopBar title="Production Assets" />
       <div className="p-4 lg:p-6">
         {/* Tab switcher */}
         <div className="mb-5 flex items-center justify-between gap-3 flex-wrap">

@@ -39,7 +39,7 @@ export function CustomersList() {
 
   return (
     <div>
-      <TopBar title="Customers" />
+      <TopBar title="Audience" />
       <div className="p-4 lg:p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">

@@ -117,7 +117,7 @@ export function StaffRoster() {
 
   return (
     <div>
-      <TopBar title="Staff" />
+      <TopBar title="Crew" />
       <div className="p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-cuesheet/45">

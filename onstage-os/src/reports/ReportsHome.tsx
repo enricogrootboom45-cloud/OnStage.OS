@@ -215,7 +215,7 @@ export function ReportsHome() {
 
   return (
     <div>
-      <TopBar title="Dashboard" />
+      <TopBar title="Mission Control" />
       <div className="p-6">
         {/* KPI row */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">

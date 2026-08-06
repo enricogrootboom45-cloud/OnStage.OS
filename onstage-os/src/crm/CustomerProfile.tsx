@@ -59,7 +59,7 @@ export function CustomerProfile() {
           to="/customers"
           className="mb-4 inline-flex items-center gap-1.5 text-sm text-cuesheet/45 hover:text-cuesheet"
         >
-          <ArrowLeft size={15} /> All customers
+          <ArrowLeft size={15} /> All audience
         </Link>
 
         {/* Profile header */}

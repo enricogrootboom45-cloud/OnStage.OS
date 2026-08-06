@@ -46,7 +46,7 @@ export function EventsList() {
 
   return (
     <div>
-      <TopBar title="Events" />
+      <TopBar title="Productions" />
       <div className="p-6">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-cuesheet/45">
