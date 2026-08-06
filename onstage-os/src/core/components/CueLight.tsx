@@ -1,32 +1,40 @@
 import { clsx } from '../utils'
 
-export type CueStatus = 'live' | 'standby' | 'offline' | 'done'
+export type CueTone = 'amber' | 'wash' | 'standby' | 'graphite' | 'cuesheet'
 
-interface CueLightProps {
-  status: CueStatus
+export interface CueLightProps {
+  tone: CueTone
+  label: string
   pulse?: boolean
   className?: string
 }
 
-export function CueLight({ status, pulse = false, className }: CueLightProps) {
-  const colors: Record<CueStatus, string> = {
-    live: 'bg-amber shadow-glow shadow-amber/40',
-    standby: 'bg-sky-400',
-    offline: 'bg-graphite-line',
-    done: 'bg-emerald-500'
-  }
+const DOT: Record<CueTone, string> = {
+  amber: 'bg-amber',
+  wash: 'bg-wash',
+  standby: 'bg-standby',
+  graphite: 'bg-graphite',
+  cuesheet: 'bg-cuesheet/60',
+}
 
-  const isPulsing = pulse && (status === 'live' || status === 'standby')
+const TEXT: Record<CueTone, string> = {
+  amber: 'text-amber-bright',
+  wash: 'text-wash',
+  standby: 'text-standby',
+  graphite: 'text-cuesheet/40',
+  cuesheet: 'text-cuesheet/60',
+}
 
+export function CueLight({ tone, label, pulse = false, className }: CueLightProps) {
   return (
-    <div className={clsx("relative flex h-2.5 w-2.5 items-center justify-center", className)}>
-      {isPulsing && (
-        <span className={clsx(
-          "absolute inline-flex h-full w-full animate-ping rounded-full opacity-60",
-          status === 'live' ? 'bg-amber' : 'bg-sky-400'
-        )} />
-      )}
-      <span className={clsx('relative inline-flex h-2.5 w-2.5 rounded-full', colors[status])} />
-    </div>
+    <span className={clsx('inline-flex items-center gap-1.5 text-xs', TEXT[tone], className)}>
+      <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+        {pulse && (
+          <span className={clsx('absolute inline-flex h-full w-full animate-ping rounded-full opacity-60', DOT[tone])} />
+        )}
+        <span className={clsx('relative inline-flex h-2 w-2 rounded-full', DOT[tone])} />
+      </span>
+      {label}
+    </span>
   )
 }
