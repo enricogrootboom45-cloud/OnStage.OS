@@ -33,6 +33,16 @@ export default {
         body:    ['"Inter"', 'sans-serif'],
         mono:    ['"IBM Plex Mono"', 'monospace'],
       },
+      fontSize: {
+        // Named scale — see IDENTITY.md. Use these instead of text-2xl /
+        // text-[11px] bracket values, so type scale stops being a
+        // per-screen judgment call.
+        'display-hero': ['3.5rem',    { lineHeight: '1',    fontWeight: '700', letterSpacing: '-0.02em' }], // 56px
+        'display-1':    ['2rem',      { lineHeight: '1.15', fontWeight: '700', letterSpacing: '-0.01em' }], // 32px
+        'stat':         ['2.75rem',   { lineHeight: '1.05', fontWeight: '600' }],                            // 44px
+        'label':        ['0.6875rem',{ lineHeight: '1.3',  letterSpacing: '0.08em' }],                      // 11px
+        'micro':        ['0.625rem', { lineHeight: '1.3',  letterSpacing: '0.06em' }],                      // 10px
+      },
       boxShadow: {
         // ordinary card — subtle bevel highlight, no color
         riser: 'inset 0 1px 0 rgba(255,255,255,0.04)',

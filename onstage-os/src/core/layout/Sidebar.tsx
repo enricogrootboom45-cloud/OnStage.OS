@@ -8,13 +8,13 @@ import { useLayout } from './LayoutContext'
 import { useRole } from '../hooks/useRole'
 
 const MGMT_NAV = [
-  { to: '/',          label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/events',    label: 'Events',    icon: Ticket },
-  { to: '/staff',     label: 'Staff',     icon: UserCheck },
-  { to: '/equipment', label: 'Equipment', icon: Package },
-  { to: '/venues',    label: 'Venues',    icon: MapPin },
-  { to: '/customers', label: 'Customers', icon: Contact },
-  { to: '/post',      label: 'Post to community', icon: Send },
+  { to: '/',          label: 'Mission Control',    icon: LayoutDashboard, end: true },
+  { to: '/events',    label: 'Productions',        icon: Ticket },
+  { to: '/staff',     label: 'Crew',                icon: UserCheck },
+  { to: '/equipment', label: 'Production Assets',  icon: Package },
+  { to: '/venues',    label: 'Venues',              icon: MapPin },
+  { to: '/customers', label: 'Audience',            icon: Contact },
+  { to: '/post',      label: 'Community',           icon: Send },
 ]
 
 const CREW_NAV = [

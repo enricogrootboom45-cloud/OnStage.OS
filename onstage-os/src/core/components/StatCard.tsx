@@ -29,7 +29,7 @@ export function StatCard({
       )}
     >
       <div className="flex items-start justify-between">
-        <span className="font-mono text-[11px] uppercase tracking-wider text-cuesheet/40">
+        <span className="font-mono text-label uppercase text-cuesheet/40">
           {label}
         </span>
         {icon && (
@@ -44,7 +44,7 @@ export function StatCard({
       </div>
       <p
         className={clsx(
-          'mt-2 font-display text-2xl font-semibold',
+          'mt-2 font-display text-stat',
           tone === 'warning' ? 'text-standby' : tone === 'live' ? 'text-amber-bright' : 'text-cuesheet',
         )}
       >
@@ -54,7 +54,7 @@ export function StatCard({
         <div className="mt-1.5 flex items-center gap-1.5">
           <span
             className={clsx(
-              'inline-flex items-center gap-0.5 font-mono text-[11px]',
+              'inline-flex items-center gap-0.5 font-mono text-label',
               (trend.good ?? trend.direction === 'up') ? 'text-wash' : 'text-standby',
             )}
           >
