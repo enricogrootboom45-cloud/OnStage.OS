@@ -33,6 +33,14 @@ export default {
         body:    ['"Inter"', 'sans-serif'],
         mono:    ['"IBM Plex Mono"', 'monospace'],
       },
+      boxShadow: {
+        // ordinary card — subtle bevel highlight, no color
+        riser: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+        // live / featured content — amber glow instead of a flat border
+        glow: '0 0 0 1px rgba(255,167,92,0.25), 0 12px 28px -10px rgba(232,137,58,0.28)',
+        // raised FAB
+        fab: '0 0 0 5px #16140F, 0 0 24px 4px rgba(232,137,58,0.45), 0 8px 18px -4px rgba(0,0,0,0.6)',
+      },
       fontSize: {
         // Named scale — see IDENTITY.md. Use these instead of text-2xl /
         // text-[11px] bracket values, so type scale stops being a
@@ -42,14 +50,6 @@ export default {
         'stat':         ['2.75rem',   { lineHeight: '1.05', fontWeight: '600' }],                            // 44px
         'label':        ['0.6875rem',{ lineHeight: '1.3',  letterSpacing: '0.08em' }],                      // 11px
         'micro':        ['0.625rem', { lineHeight: '1.3',  letterSpacing: '0.06em' }],                      // 10px
-      },
-      boxShadow: {
-        // ordinary card — subtle bevel highlight, no color
-        riser: 'inset 0 1px 0 rgba(255,255,255,0.04)',
-        // live / featured content — amber glow instead of a flat border
-        glow: '0 0 0 1px rgba(255,167,92,0.25), 0 12px 28px -10px rgba(232,137,58,0.28)',
-        // raised FAB
-        fab: '0 0 0 5px #16140F, 0 0 24px 4px rgba(232,137,58,0.45), 0 8px 18px -4px rgba(0,0,0,0.6)',
       },
       screens: { xs: '375px' },
     },
