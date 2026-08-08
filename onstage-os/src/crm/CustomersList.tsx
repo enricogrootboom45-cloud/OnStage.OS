@@ -6,13 +6,19 @@ import { useAuth } from '../core/auth/AuthProvider'
 import { TopBar } from '../core/layout/TopBar'
 import { Button } from '../core/components/Button'
 import { EmptyState } from '../core/components/EmptyState'
+import { Avatar } from '../core/components/Avatar'
 import { Modal, Field, inputClass } from '../core/components/Modal'
-import { formatDateTime } from '../core/utils'
+import { formatMoney } from '../core/utils'
 import type { Customer } from '../core/types'
+
+interface CustomerWithStats extends Customer {
+  ticketCount: number
+  totalSpend: number
+}
 
 export function CustomersList() {
   const { organization } = useAuth()
-  const [customers, setCustomers] = useState<Customer[]>([])
+  const [customers, setCustomers] = useState<CustomerWithStats[]>([])
   const [loading,   setLoading]   = useState(true)
   const [showForm,  setShowForm]  = useState(false)
   const [search,    setSearch]    = useState('')
@@ -24,7 +30,34 @@ export function CustomersList() {
       .from('customers').select('*')
       .eq('organization_id', organization.id)
       .order('created_at', { ascending: false })
-    setCustomers((data as Customer[]) || [])
+    const base = (data as Customer[]) || []
+
+    // One aggregate pass so the list shows "we know this person" —
+    // ticket count + spend — instead of just raw contact details.
+    let ticketData: { customer_id: string | null; amount_paid: number | null }[] = []
+    if (base.length > 0) {
+      const res = await supabase
+        .from('tickets')
+        .select('customer_id, amount_paid')
+        .in('customer_id', base.map((c) => c.id))
+        .in('status', ['valid', 'checked_in'])
+      ticketData = res.data || []
+    }
+
+    const stats = new Map<string, { count: number; spend: number }>()
+    for (const t of ticketData) {
+      if (!t.customer_id) continue
+      const s = stats.get(t.customer_id) || { count: 0, spend: 0 }
+      s.count += 1
+      s.spend += Number(t.amount_paid) || 0
+      stats.set(t.customer_id, s)
+    }
+
+    setCustomers(base.map((c) => ({
+      ...c,
+      ticketCount: stats.get(c.id)?.count || 0,
+      totalSpend: stats.get(c.id)?.spend || 0,
+    })))
     setLoading(false)
   }
 
@@ -44,7 +77,7 @@ export function CustomersList() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <p className="text-sm text-cuesheet/45">
-              {customers.length} customer{customers.length === 1 ? '' : 's'}
+              {customers.length} in your audience
             </p>
             <input
               value={search}
@@ -55,59 +88,53 @@ export function CustomersList() {
             />
           </div>
           <Button onClick={() => setShowForm(true)}>
-            <Plus size={15} /> Add customer
+            <Plus size={15} /> Add to audience
           </Button>
         </div>
 
         {!loading && customers.length === 0 ? (
           <EmptyState
             icon={<Contact size={28} />}
-            title="No customers yet"
-            body="Your 2,000+ leads land here once imported — every purchase builds their history automatically."
+            title="No one in your audience yet"
+            body="Every ticket buyer lands here automatically — their purchase history builds itself as they come back."
             action={
               <Button onClick={() => setShowForm(true)} variant="secondary">
-                <Plus size={15} /> Add customer
+                <Plus size={15} /> Add to audience
               </Button>
             }
           />
         ) : (
-          <div className="overflow-hidden rounded-lg border border-graphite-line">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-riser text-xs uppercase tracking-wide text-cuesheet/40">
-                <tr>
-                  <th className="px-4 py-3 font-normal">Name</th>
-                  <th className="px-4 py-3 font-normal">Email</th>
-                  <th className="px-4 py-3 font-normal hidden md:table-cell">Phone</th>
-                  <th className="px-4 py-3 font-normal hidden lg:table-cell">Source</th>
-                  <th className="px-4 py-3 font-normal hidden lg:table-cell">Added</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((c) => (
-                  <tr key={c.id}
-                    className="border-t border-graphite-line/70 transition-colors hover:bg-riser/60">
-                    <td className="px-4 py-3">
-                      <Link
-                        to={`/customers/${c.id}`}
-                        className="font-medium text-cuesheet hover:text-amber-bright"
-                      >
-                        {c.full_name || '—'}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-cuesheet/60">{c.email || '—'}</td>
-                    <td className="px-4 py-3 text-cuesheet/60 hidden md:table-cell">
-                      {c.phone || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-cuesheet/45 hidden lg:table-cell">
-                      {c.source || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-cuesheet/45 hidden lg:table-cell">
-                      {formatDateTime(c.created_at)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="divide-y divide-graphite-line/70 rounded-lg border border-graphite-line bg-riser">
+            {filtered.map((c) => (
+              <Link
+                key={c.id}
+                to={`/customers/${c.id}`}
+                className="flex flex-wrap items-center gap-3 px-4 py-3 transition-colors hover:bg-blackout/30"
+              >
+                <Avatar name={c.full_name || c.email || '?'} size="sm" />
+                <div className="min-w-[160px] flex-1">
+                  <p className="text-sm text-cuesheet">{c.full_name || c.email || 'Unnamed'}</p>
+                  <p className="text-xs text-cuesheet/40">{c.email || c.phone || 'No contact info'}</p>
+                </div>
+                <div className="w-32 shrink-0 text-right">
+                  {c.ticketCount > 0 ? (
+                    <>
+                      <p className="text-sm text-amber">{formatMoney(c.totalSpend)}</p>
+                      <p className="text-xs text-cuesheet/35">
+                        {c.ticketCount} ticket{c.ticketCount === 1 ? '' : 's'}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-cuesheet/25">No purchases yet</p>
+                  )}
+                </div>
+                {c.source && (
+                  <span className="hidden shrink-0 rounded-full border border-graphite-line px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-cuesheet/35 lg:inline-block">
+                    {c.source}
+                  </span>
+                )}
+              </Link>
+            ))}
           </div>
         )}
       </div>
@@ -146,7 +173,7 @@ function NewCustomerModal({ organizationId, onClose, onCreated }:
   }
 
   return (
-    <Modal title="Add customer" onClose={onClose}>
+    <Modal title="Add to audience" onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <Field label="Full name">
           <input value={fullName} onChange={e => setFullName(e.target.value)}
@@ -166,7 +193,7 @@ function NewCustomerModal({ organizationId, onClose, onCreated }:
         </Field>
         {error && <p className="mb-3 text-sm text-standby">{error}</p>}
         <Button type="submit" disabled={busy} className="w-full">
-          {busy ? 'Adding…' : 'Add customer'}
+          {busy ? 'Adding…' : 'Add to audience'}
         </Button>
       </form>
     </Modal>

@@ -6,6 +6,7 @@ import { TopBar } from '../core/layout/TopBar'
 import { Button } from '../core/components/Button'
 import { EmptyState } from '../core/components/EmptyState'
 import { CueLight } from '../core/components/CueLight'
+import { Avatar } from '../core/components/Avatar'
 import { Modal, Field, inputClass } from '../core/components/Modal'
 import { shiftStatusMeta } from '../core/statusMeta'
 import { useShiftRealtime } from '../core/useShiftRealtime'
@@ -183,49 +184,44 @@ export function StaffRoster() {
               </div>
             </div>
 
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-cuesheet/40">
-                <tr>
-                  <th className="px-4 py-2 font-normal">Crew member</th>
-                  <th className="px-4 py-2 font-normal">Role</th>
-                  <th className="px-4 py-2 font-normal">Status</th>
-                  <th className="px-4 py-2 font-normal">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {staff.map((member) => {
-                  const shift = selectedEventId ? shiftFor(member.id) : undefined
-                  const meta = shift ? shiftStatusMeta(shift.status) : null
-                  return (
-                    <tr key={member.id} className="border-t border-graphite-line/70">
-                      <td className="px-4 py-3 text-cuesheet">{member.full_name}</td>
-                      <td className="px-4 py-3 text-cuesheet/55">
-                        {member.role_title || '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        {meta ? (
-                          <CueLight tone={meta.tone} label={meta.label} pulse={meta.pulse} />
-                        ) : (
-                          <span className="text-xs text-cuesheet/30">Not assigned</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {!selectedEventId ? null : !shift ? (
-                          <button
-                            onClick={() => assignShift(member.id)}
-                            className="text-xs text-wash hover:text-cuesheet"
-                          >
-                            Assign to event
-                          </button>
-                        ) : (
-                          <ShiftActions shift={shift} onUpdate={updateShift} />
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+            {/* Face-first roster — Connection, not a spreadsheet */}
+            <div className="divide-y divide-graphite-line/70">
+              {staff.map((member) => {
+                const shift = selectedEventId ? shiftFor(member.id) : undefined
+                const meta = shift ? shiftStatusMeta(shift.status) : null
+                return (
+                  <div key={member.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                    <Avatar name={member.full_name} size="sm" />
+                    <div className="min-w-[140px] flex-1">
+                      <p className="text-sm text-cuesheet">{member.full_name}</p>
+                      <p className="text-xs text-cuesheet/45">{member.role_title || 'No role set'}</p>
+                    </div>
+                    <div className="w-20 shrink-0">
+                      <RateCell staff={member} onSaved={loadBase} />
+                    </div>
+                    <div className="w-32 shrink-0">
+                      {meta ? (
+                        <CueLight tone={meta.tone} label={meta.label} pulse={meta.pulse} />
+                      ) : (
+                        <span className="text-xs text-cuesheet/30">Not assigned</span>
+                      )}
+                    </div>
+                    <div className="shrink-0">
+                      {!selectedEventId ? null : !shift ? (
+                        <button
+                          onClick={() => assignShift(member.id)}
+                          className="text-xs text-wash hover:text-cuesheet"
+                        >
+                          Assign to event
+                        </button>
+                      ) : (
+                        <ShiftActions shift={shift} onUpdate={updateShift} />
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -241,6 +237,51 @@ export function StaffRoster() {
         />
       )}
     </div>
+  )
+}
+
+function RateCell({ staff, onSaved }: { staff: Staff; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(staff.hourly_rate != null ? String(staff.hourly_rate) : '')
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    setSaving(true)
+    const parsed = value.trim() === '' ? null : Number(value)
+    await supabase.from('staff').update({ hourly_rate: parsed }).eq('id', staff.id)
+    setSaving(false)
+    setEditing(false)
+    onSaved()
+  }
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <input
+          autoFocus
+          type="number"
+          min={0}
+          step="0.01"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && save()}
+          placeholder="0.00"
+          className="w-20 rounded-md border border-graphite-line bg-blackout px-2 py-1 text-xs text-cuesheet"
+        />
+        <button onClick={save} disabled={saving} className="text-xs text-amber-bright hover:text-amber">
+          {saving ? '…' : 'Save'}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className={`text-xs hover:text-cuesheet ${staff.hourly_rate == null ? 'text-standby/70' : 'text-cuesheet/55'}`}
+    >
+      {staff.hourly_rate != null ? `R${Number(staff.hourly_rate).toFixed(2)}` : 'Set rate'}
+    </button>
   )
 }
 
@@ -307,6 +348,7 @@ function NewStaffModal({
   const [fullName, setFullName] = useState('')
   const [roleTitle, setRoleTitle] = useState('')
   const [phone, setPhone] = useState('')
+  const [hourlyRate, setHourlyRate] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -319,6 +361,7 @@ function NewStaffModal({
       full_name: fullName,
       role_title: roleTitle || null,
       phone: phone || null,
+      hourly_rate: hourlyRate.trim() === '' ? null : Number(hourlyRate),
     })
     setSubmitting(false)
     if (error) {
@@ -346,6 +389,17 @@ function NewStaffModal({
             onChange={(e) => setRoleTitle(e.target.value)}
             className={inputClass}
             placeholder="e.g. Bar lead, Security, Stage hand"
+          />
+        </Field>
+        <Field label="Hourly rate (ZAR, optional)">
+          <input
+            type="number"
+            min={0}
+            step="0.01"
+            value={hourlyRate}
+            onChange={(e) => setHourlyRate(e.target.value)}
+            className={inputClass}
+            placeholder="e.g. 150.00 — leave blank to set later"
           />
         </Field>
         <Field label="Phone">
